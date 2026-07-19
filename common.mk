@@ -93,8 +93,7 @@ PRODUCT_PACKAGES += \
     libqcomvisualizer \
     libqcomvoiceprocessing \
     libqcompostprocbundle \
-    libvolumelistener \
-    SamsungDAP
+    libvolumelistener
 
 TARGET_EXCLUDES_AUDIOFX := true
 
@@ -133,7 +132,6 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
-    android.hardware.camera.provider-service_32.samsung \
     android.frameworks.cameraservice.common@2.0.vendor \
     android.frameworks.cameraservice.device@2.0.vendor \
     android.frameworks.cameraservice.service@2.1.vendor \
@@ -173,8 +171,6 @@ PRODUCT_PACKAGES += \
     vendor.display.config@2.0.vendor
 
 # Doze
-PRODUCT_PACKAGES += \
-    SamsungDoze
 
 # DRM
 PRODUCT_PACKAGES += \
@@ -186,8 +182,6 @@ PRODUCT_PACKAGES += \
     fastbootd
 
 # Fingerprint
-PRODUCT_PACKAGES += \
-    android.hardware.biometrics.fingerprint-service.samsung
 
 # FM
 # PRODUCT_PACKAGES += \
@@ -215,8 +209,6 @@ PRODUCT_COPY_FILES += \
 
 # Health
 PRODUCT_PACKAGES += \
-    android.hardware.health-service.samsung \
-    android.hardware.health-service.samsung-recovery \
     android.hardware.health@2.1.vendor \
     vendor.lineage.health-service.default
 
@@ -250,7 +242,6 @@ PRODUCT_COPY_FILES += \
 
 # Keymaster
 PRODUCT_PACKAGES += \
-    android.hardware.keymaster@4.0-service.samsung \
     libkeymaster4_1support.vendor
 
 $(call soong_config_set,samsungVars,target_keymaster4_library,//vendor/samsung/sm6150-common:libskeymaster4device)
@@ -388,7 +379,6 @@ PRODUCT_PACKAGES += \
     librmnetctl \
     libxml2 \
     librilutils \
-    secril_config_svc \
     libprotobuf-cpp-full \
     libcutils_shim.vendor
 
@@ -399,7 +389,6 @@ PRODUCT_COPY_FILES += \
 
 # Sensors
 PRODUCT_PACKAGES += \
-    android.hardware.sensors-service.samsung-multihal \
     android.hardware.sensors@2.0-ScopedWakelock.vendor \
     sensors.samsung-sm6150 \
     android.frameworks.sensorservice@1.0.vendor
@@ -433,9 +422,6 @@ PRODUCT_PACKAGES += \
     android.hardware.usb@1.0.vendor \
     android.hardware.usb@1.1.vendor
 
-# Vibrator
-PRODUCT_PACKAGES += \
-    android.hardware.vibrator-service.samsung
 
 # VNDK
 PRODUCT_PACKAGES += \
