@@ -157,6 +157,7 @@ ro.fastbootd.available=true
 
 # Fingerprint
 ro.vendor.fingerprint.request_touch_event=true
+ro.vendor.fingerprint.force_calibrate=true
 ro.vendor.fingerprint.type=udfps_optical
 
 # FM

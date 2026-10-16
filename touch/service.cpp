@@ -14,51 +14,31 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "vendor.lineage.touch@1.0-service.samsung"
-
 #include <android-base/logging.h>
-#include <binder/ProcessState.h>
-#include <hidl/HidlTransportSupport.h>
+#include <android/binder_manager.h>
+#include <android/binder_process.h>
+#include <cstdlib>
+#include <string>
 
 #include "TouchscreenGesture.h"
 
-using android::hardware::configureRpcThreadpool;
-using android::hardware::joinRpcThreadpool;
-using android::sp;
-using android::status_t;
-using android::OK;
+using namespace aidl::vendor::lineage::touch::samsung;
 
-using ::vendor::lineage::touch::V1_0::samsung::TouchscreenGesture;
+template <typename T>
+void registerService() {
+    if (!T::isSupported()) {
+        LOG(WARNING) << T::descriptor << " is unavailable on this device";
+        return;
+    }
+    auto service = ndk::SharedRefBase::make<T>();
+    const std::string instance = std::string(T::descriptor) + "/default";
+    CHECK_EQ(AServiceManager_addService(service->asBinder().get(), instance.c_str()), STATUS_OK);
+}
 
 int main() {
-    sp<TouchscreenGesture> touchscreenGesture;
-    status_t status;
-
-    LOG(INFO) << "Touch HAL service is starting.";
-
-    touchscreenGesture = new TouchscreenGesture();
-    if (touchscreenGesture == nullptr) {
-        LOG(ERROR) << "Can not create an instance of Touch HAL TouchscreenGesture Iface, exiting.";
-        goto shutdown;
-    }
-
-    configureRpcThreadpool(1, true /*callerWillJoin*/);
-
-    if (touchscreenGesture->isSupported()) {
-        status = touchscreenGesture->registerAsService();
-        if (status != OK) {
-            LOG(ERROR) << "Could not register service for Touch HAL TouchscreenGesture Iface ("
-                       << status << ")";
-            goto shutdown;
-        }
-    }
-
-    LOG(INFO) << "Touch HAL service is ready.";
-    joinRpcThreadpool();
-// Should not pass this line
-
-shutdown:
-    // In normal operation, we don't expect the thread pool to shutdown
-    LOG(ERROR) << "Touch HAL service is shutting down.";
-    return 1;
+    // Sysfs controls and saved state are serialized on the joining binder thread.
+    ABinderProcess_setThreadPoolMaxThreadCount(0);
+    registerService<TouchscreenGesture>();
+    ABinderProcess_joinThreadPool();
+    return EXIT_FAILURE;
 }

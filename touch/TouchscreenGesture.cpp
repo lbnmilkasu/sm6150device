@@ -14,54 +14,34 @@
  * limitations under the License.
  */
 
-#include <fstream>
-
 #include "TouchscreenGesture.h"
+#include "samsung_touch.h"
 
-namespace vendor {
-namespace lineage {
-namespace touch {
-namespace V1_0 {
-namespace samsung {
+#include <android-base/file.h>
+#include <unistd.h>
 
-static constexpr const char* kTspPath = TSP_CMD_NODE;
-
-const std::map<int32_t, TouchscreenGesture::GestureInfo> TouchscreenGesture::kGestureInfoMap = {
-    // clang-format off
-    {0, {0x1c7, "Single Tap"}},
-    // clang-format on
-};
-
+namespace aidl::vendor::lineage::touch::samsung {
 bool TouchscreenGesture::isSupported() {
-    std::ifstream file(kTspPath);
-    return file.good();
+    return access(TSP_CMD_NODE, W_OK) == 0;
 }
 
-// Methods from ::vendor::lineage::touch::V1_0::ITouchscreenGesture follow.
-Return<void> TouchscreenGesture::getSupportedGestures(getSupportedGestures_cb resultCb) {
-    std::vector<Gesture> gestures;
+ndk::ScopedAStatus TouchscreenGesture::getSupportedGestures(std::vector<Gesture>* gestures) {
+    Gesture gesture;
+    gesture.id = 0;
+    gesture.name = "Single Tap";
+    gesture.keycode = 0x1c7;
+    *gestures = {gesture};
+    return ndk::ScopedAStatus::ok();
+}
 
-    for (const auto& entry : kGestureInfoMap) {
-        gestures.push_back({entry.first, entry.second.name, entry.second.keycode});
+ndk::ScopedAStatus TouchscreenGesture::setGestureEnabled(const Gesture& gesture, bool enabled) {
+    if (gesture.id != 0) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
     }
-    resultCb(gestures);
-
-    return Void();
+    if (!::android::base::WriteStringToFile(enabled ? "singletap_enable,1" : "singletap_enable,0",
+                                           TSP_CMD_NODE, true)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+    }
+    return ndk::ScopedAStatus::ok();
 }
-
-Return<bool> TouchscreenGesture::setGestureEnabled(
-    const ::vendor::lineage::touch::V1_0::Gesture&, bool enabled) {
-    std::fstream file(kTspPath);
-
-    file << "singletap_enable," << (enabled ? "1" : "0");
-
-    return !file.fail();
-}
-
-// Methods from ::android::hidl::base::V1_0::IBase follow.
-
-}  // namespace samsung
-}  // namespace V1_0
-}  // namespace touch
-}  // namespace lineage
-}  // namespace vendor
+}  // namespace aidl::vendor::lineage::touch::samsung

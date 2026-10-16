@@ -14,50 +14,44 @@
  * limitations under the License.
  */
 
-#include <android-base/file.h>
-#include <android-base/strings.h>
-
-#include <fstream>
-
 #include "SunlightEnhancement.h"
 
-using android::base::ReadFileToString;
-using android::base::Trim;
-using android::base::WriteStringToFile;
+#include <android-base/file.h>
+#include <android-base/strings.h>
+#include <unistd.h>
 
-namespace vendor {
-namespace lineage {
-namespace livedisplay {
-namespace V2_0 {
-namespace samsung {
-
+namespace aidl::vendor::lineage::livedisplay::samsung {
 static constexpr const char* kBrightnessPath = "/sys/class/backlight/panel0-backlight/brightness";
 
-// Methods from ::vendor::lineage::livedisplay::V2_0::ISunlightEnhancement follow.
 bool SunlightEnhancement::isSupported() {
-    std::fstream brightness(kBrightnessPath, brightness.in | brightness.out);
-    return brightness.good();
+    return access(kBrightnessPath, R_OK | W_OK) == 0;
 }
 
-// Methods from ::vendor::lineage::livedisplay::V2_0::IAdaptiveBacklight follow.
-Return<bool> SunlightEnhancement::isEnabled() {
+ndk::ScopedAStatus SunlightEnhancement::getEnabled(bool* enabled) {
     std::string brightness;
-    ReadFileToString(kBrightnessPath, &brightness);
-    return brightness == "365";
-}
-
-Return<bool> SunlightEnhancement::setEnabled(bool enabled) {
-    if (enabled) {
-        ReadFileToString(kBrightnessPath, &previous_brightness);
-        return WriteStringToFile("365", kBrightnessPath, true);
-    } else if (!previous_brightness.empty()) {
-        return WriteStringToFile(previous_brightness, kBrightnessPath, true);
+    if (!::android::base::ReadFileToString(kBrightnessPath, &brightness)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
     }
-    return true;
+    *enabled = ::android::base::Trim(brightness) == "365";
+    return ndk::ScopedAStatus::ok();
 }
 
-}  // namespace samsung
-}  // namespace V2_0
-}  // namespace livedisplay
-}  // namespace lineage
-}  // namespace vendor
+ndk::ScopedAStatus SunlightEnhancement::setEnabled(bool enabled) {
+    if (enabled) {
+        // Repeated enables must not replace the saved brightness with the boost value.
+        if (previous_brightness.empty() &&
+            !::android::base::ReadFileToString(kBrightnessPath, &previous_brightness)) {
+            return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+        }
+        if (!::android::base::WriteStringToFile("365", kBrightnessPath, true)) {
+            return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+        }
+    } else if (!previous_brightness.empty()) {
+        if (!::android::base::WriteStringToFile(previous_brightness, kBrightnessPath, true)) {
+            return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+        }
+        previous_brightness.clear();
+    }
+    return ndk::ScopedAStatus::ok();
+}
+}  // namespace aidl::vendor::lineage::livedisplay::samsung

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 cc_binary {
-    name: "vendor.lineage.livedisplay@2.0-service.samsung-sm6150",
-    init_rc: ["vendor.lineage.livedisplay@2.0-service.samsung-sm6150.rc"],
-    defaults: ["hidl_defaults"],
+    name: "vendor.lineage.livedisplay-service.samsung-sm6150",
+    init_rc: ["vendor.lineage.livedisplay-service.samsung-sm6150.rc"],
+    vintf_fragments: ["vendor.lineage.livedisplay-service.sm6150.xml"],
     relative_install_path: "hw",
     srcs: [
         "AdaptiveBacklight.cpp",
@@ -25,10 +25,8 @@ cc_binary {
     ],
     shared_libs: [
         "libbase",
-        "libbinder",
-        "libhidlbase",
-        "libutils",
-        "vendor.lineage.livedisplay@2.0",
+        "libbinder_ndk",
+        "vendor.lineage.livedisplay-V1-ndk",
     ],
     vendor: true,
 }

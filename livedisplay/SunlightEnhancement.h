@@ -14,44 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef VENDOR_LINEAGE_LIVEDISPLAY_V2_0_SUNLIGHTENHANCEMENT_H
-#define VENDOR_LINEAGE_LIVEDISPLAY_V2_0_SUNLIGHTENHANCEMENT_H
+#pragma once
 
-#include <hidl/MQDescriptor.h>
-#include <hidl/Status.h>
-#include <vendor/lineage/livedisplay/2.0/ISunlightEnhancement.h>
+#include <aidl/vendor/lineage/livedisplay/BnSunlightEnhancement.h>
+#include <string>
 
-namespace vendor {
-namespace lineage {
-namespace livedisplay {
-namespace V2_0 {
-namespace samsung {
-
-using ::android::hardware::hidl_array;
-using ::android::hardware::hidl_memory;
-using ::android::hardware::hidl_string;
-using ::android::hardware::hidl_vec;
-using ::android::hardware::Return;
-using ::android::hardware::Void;
-using ::android::sp;
-
-class SunlightEnhancement : public ISunlightEnhancement {
+namespace aidl::vendor::lineage::livedisplay::samsung {
+class SunlightEnhancement : public BnSunlightEnhancement {
   public:
-    bool isSupported();
+    static bool isSupported();
+    ndk::ScopedAStatus getEnabled(bool* enabled) override;
+    ndk::ScopedAStatus setEnabled(bool enabled) override;
 
-    // Methods from ::vendor::lineage::livedisplay::V2_0::ISunlightEnhancement follow.
-    Return<bool> isEnabled() override;
-    Return<bool> setEnabled(bool enabled) override;
-
-    // Methods from ::android::hidl::base::V1_0::IBase follow.
   private:
     std::string previous_brightness;
 };
-
-}  // namespace samsung
-}  // namespace V2_0
-}  // namespace livedisplay
-}  // namespace lineage
-}  // namespace vendor
-
-#endif  // VENDOR_LINEAGE_LIVEDISPLAY_V2_0_SUNLIGHTENHANCEMENT_H
+}  // namespace aidl::vendor::lineage::livedisplay::samsung

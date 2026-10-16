@@ -14,119 +14,82 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "DisplayModesService"
-
 #include "DisplayModes.h"
+
+#include <android-base/file.h>
 #include <android-base/logging.h>
 #include <fstream>
+#include <limits>
+#include <unistd.h>
 
-namespace vendor {
-namespace lineage {
-namespace livedisplay {
-namespace V2_0 {
-namespace samsung {
-
+namespace aidl::vendor::lineage::livedisplay::samsung {
 static constexpr const char* kModePath = "/sys/class/mdnie/mdnie/mode";
 static constexpr const char* kModeMaxPath = "/sys/class/mdnie/mdnie/mode_max";
 static constexpr const char* kDefaultPath = "/data/vendor/display/.displaymodedefault";
 
-const std::map<int32_t, std::string> DisplayModes::kModeMap = {
-    // clang-format off
-    {2, "Natural"},
-    {4, "Vivid"},
-    // clang-format on
-};
+const std::map<int32_t, std::string> DisplayModes::kModeMap = {{2, "Natural"}, {4, "Vivid"}};
 
-DisplayModes::DisplayModes() : mDefaultModeId(4) {
+DisplayModes::DisplayModes() {
     std::ifstream defaultFile(kDefaultPath);
-    int value;
-
-    defaultFile >> value;
-    LOG(DEBUG) << "Default file read result " << value << " fail " << defaultFile.fail();
-    if (defaultFile.fail()) {
-        return;
-    }
-
-    for (const auto& entry : kModeMap) {
-        if (value == entry.first) {
-            mDefaultModeId = entry.first;
-            break;
+    int32_t value;
+    if (defaultFile >> value && kModeMap.count(value)) {
+        mDefaultModeId = value;
+        if (!setDisplayMode(value, false).isOk()) {
+            LOG(WARNING) << "Could not restore the default display mode";
         }
     }
-
-    setDisplayMode(mDefaultModeId, false);
 }
 
 bool DisplayModes::isSupported() {
-    std::ofstream modeFile(kModePath);
-    return modeFile.good();
+    return access(kModePath, R_OK | W_OK) == 0;
 }
 
-// Methods from ::vendor::lineage::livedisplay::V2_0::IDisplayModes follow.
-Return<void> DisplayModes::getDisplayModes(getDisplayModes_cb resultCb) {
+ndk::ScopedAStatus DisplayModes::getDisplayModes(std::vector<DisplayMode>* modes) {
     std::ifstream maxModeFile(kModeMaxPath);
-    int value;
-    std::vector<DisplayMode> modes;
-    if (!maxModeFile.fail()) {
-        maxModeFile >> value;
-    } else {
-        value = kModeMap.size();
+    int32_t maxMode;
+    if (!(maxModeFile >> maxMode)) maxMode = std::numeric_limits<int32_t>::max();
+    modes->clear();
+    for (const auto& [id, name] : kModeMap) {
+        if (id < maxMode) {
+            DisplayMode mode;
+            mode.id = id;
+            mode.name = name;
+            modes->push_back(mode);
+        }
     }
-    for (const auto& entry : kModeMap) {
-        if (entry.first < value) modes.push_back({entry.first, entry.second});
-    }
-    resultCb(modes);
-    return Void();
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<void> DisplayModes::getCurrentDisplayMode(getCurrentDisplayMode_cb resultCb) {
-    int32_t currentModeId = mDefaultModeId;
+ndk::ScopedAStatus DisplayModes::getCurrentDisplayMode(DisplayMode* mode) {
     std::ifstream modeFile(kModePath);
-    int value;
-    modeFile >> value;
-    if (!modeFile.fail()) {
-        for (const auto& entry : kModeMap) {
-            if (value == entry.first) {
-                currentModeId = entry.first;
-                break;
-            }
-        }
+    int32_t value;
+    if (!(modeFile >> value) || !kModeMap.count(value)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
     }
-    resultCb({currentModeId, kModeMap.at(currentModeId)});
-    return Void();
+    mode->id = value;
+    mode->name = kModeMap.at(value);
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<void> DisplayModes::getDefaultDisplayMode(getDefaultDisplayMode_cb resultCb) {
-    resultCb({mDefaultModeId, kModeMap.at(mDefaultModeId)});
-    return Void();
+ndk::ScopedAStatus DisplayModes::getDefaultDisplayMode(DisplayMode* mode) {
+    mode->id = mDefaultModeId;
+    mode->name = kModeMap.at(mDefaultModeId);
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> DisplayModes::setDisplayMode(int32_t modeID, bool makeDefault) {
-    const auto iter = kModeMap.find(modeID);
-    if (iter == kModeMap.end()) {
-        return false;
+ndk::ScopedAStatus DisplayModes::setDisplayMode(int32_t modeID, bool makeDefault) {
+    if (!kModeMap.count(modeID)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
     }
-    std::ofstream modeFile(kModePath);
-    modeFile << iter->first;
-    if (modeFile.fail()) {
-        return false;
+    if (!::android::base::WriteStringToFile(std::to_string(modeID), kModePath, true)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
     }
-
     if (makeDefault) {
-        std::ofstream defaultFile(kDefaultPath);
-        defaultFile << iter->first;
-        if (defaultFile.fail()) {
-            return false;
+        if (!::android::base::WriteStringToFile(std::to_string(modeID), kDefaultPath)) {
+            return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
         }
-        mDefaultModeId = iter->first;
+        mDefaultModeId = modeID;
     }
-    return true;
+    return ndk::ScopedAStatus::ok();
 }
-
-// Methods from ::android::hidl::base::V1_0::IBase follow.
-
-}  // namespace samsung
-}  // namespace V2_0
-}  // namespace livedisplay
-}  // namespace lineage
-}  // namespace vendor
+}  // namespace aidl::vendor::lineage::livedisplay::samsung

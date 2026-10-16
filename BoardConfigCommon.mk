@@ -14,9 +14,6 @@
 # limitations under the License.
 #
 
-BUILD_BROKEN_DUP_RULES := true
-BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
-
 BOARD_VENDOR := samsung
 
 COMMON_PATH := device/samsung/sm6150-common
@@ -75,6 +72,8 @@ TARGET_KERNEL_HEADER_ARCH := arm64
 TARGET_KERNEL_SOURCE := kernel/samsung/sm6150
 BOARD_KERNEL_SEPARATED_DTBO := true
 TARGET_KERNEL_CLANG_COMPILE := true
+# Keep the legacy 4.14 toolchain reproducible with the platform prebuilt.
+TARGET_KERNEL_CLANG_VERSION := r547379
 
 # Platform
 TARGET_BOARD_PLATFORM := sm6150
@@ -103,7 +102,7 @@ SOONG_CONFIG_samsungCameraVars += extra_ids
 # ID=50 ultrawide, ID=52 depthcam
 SOONG_CONFIG_samsungCameraVars_extra_ids := 50,52
 
-$(call soong_config_set,samsungCameraVars,needs_sec_reserved_field,true)
+$(call soong_config_set_bool,samsungCameraVars,needs_sec_reserved_field,true)
 
 # Filesystem
 TARGET_FS_CONFIG_GEN := $(COMMON_PATH)/config.fs
@@ -114,9 +113,6 @@ BOARD_HAS_QCA_FM_SOC := "cherokee"
 
 # FOD
 TARGET_SURFACEFLINGER_UDFPS_LIB := //$(COMMON_PATH):libudfps_extension.sm6150
-TARGET_USES_FOD_ZPOS := true
-TARGET_SEC_FP_REQUEST_FORCE_CALIBRATE := true
-TARGET_SEC_FP_REQUEST_TOUCH_EVENT := true
 
 # Display
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS := 0x2000U | 0x400000000LL
@@ -131,8 +127,7 @@ BOARD_VENDOR_QCOM_LOC_PDK_FEATURE_SET := false
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := \
     $(COMMON_PATH)/framework_compatibility_matrix.xml \
     hardware/qcom-caf/common/vendor_framework_compatibility_matrix.xml \
-    hardware/samsung/vintf/samsung_framework_compatibility_matrix.xml \
-    vendor/lineage/config/device_framework_matrix.xml
+    hardware/samsung/vintf/samsung_framework_compatibility_matrix.xml
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
 DEVICE_MATRIX_FILE := hardware/qcom-caf/common/compatibility_matrix.xml
 
@@ -218,7 +213,7 @@ TARGET_LD_SHIM_LIBS := \
     /system/vendor/lib64/libsec-ril-dsds.so|libcutils_shim.so
 
 # Vibrator
-$(call soong_config_set,samsungVibratorVars,duration_amplitude,true)
+$(call soong_config_set_bool,samsungVibratorVars,duration_amplitude,true)
 
 # WiFi
 BOARD_WLAN_DEVICE := qcwcn

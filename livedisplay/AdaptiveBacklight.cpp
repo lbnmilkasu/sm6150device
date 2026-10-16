@@ -14,48 +14,35 @@
  * limitations under the License.
  */
 
-#include <android-base/file.h>
-#include <android-base/strings.h>
-
-#include <fstream>
-
 #include "AdaptiveBacklight.h"
 
-using android::base::ReadFileToString;
-using android::base::Trim;
-using android::base::WriteStringToFile;
+#include <android-base/file.h>
+#include <android-base/parseint.h>
+#include <android-base/strings.h>
+#include <unistd.h>
 
-namespace vendor {
-namespace lineage {
-namespace livedisplay {
-namespace V2_0 {
-namespace samsung {
-
+namespace aidl::vendor::lineage::livedisplay::samsung {
 static constexpr const char* kBacklightPath = "/sys/class/lcd/panel/alpm";
 
 bool AdaptiveBacklight::isSupported() {
-    std::fstream backlight(kBacklightPath, backlight.in | backlight.out);
-    return backlight.good();
+    return access(kBacklightPath, R_OK | W_OK) == 0;
 }
 
-// Methods from ::vendor::lineage::livedisplay::V2_0::IAdaptiveBacklight follow.
-Return<bool> AdaptiveBacklight::isEnabled() {
-    std::string tmp;
-    int32_t contents = 0;
-
-    if (ReadFileToString(kBacklightPath, &tmp)) {
-        contents = std::stoi(Trim(tmp));
+ndk::ScopedAStatus AdaptiveBacklight::getEnabled(bool* enabled) {
+    std::string value;
+    int contents = 0;
+    if (!::android::base::ReadFileToString(kBacklightPath, &value) ||
+        !::android::base::ParseInt(::android::base::Trim(value), &contents)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
     }
-
-    return contents > 0;
+    *enabled = contents > 0;
+    return ndk::ScopedAStatus::ok();
 }
 
-Return<bool> AdaptiveBacklight::setEnabled(bool enabled) {
-    return WriteStringToFile(enabled ? "2" : "0", kBacklightPath, true);
+ndk::ScopedAStatus AdaptiveBacklight::setEnabled(bool enabled) {
+    if (!::android::base::WriteStringToFile(enabled ? "2" : "0", kBacklightPath, true)) {
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_STATE);
+    }
+    return ndk::ScopedAStatus::ok();
 }
-
-}  // namespace samsung
-}  // namespace V2_0
-}  // namespace livedisplay
-}  // namespace lineage
-}  // namespace vendor
+}  // namespace aidl::vendor::lineage::livedisplay::samsung
