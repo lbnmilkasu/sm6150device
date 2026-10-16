@@ -29,6 +29,13 @@ $(call inherit-product, vendor/samsung/sm6150-common/sm6150-common-vendor.mk)
 
 COMMON_PATH := device/samsung/sm6150-common
 
+# Firmware mount points
+PRODUCT_PACKAGES += \
+    vendor_bt_firmware_mountpoint \
+    vendor_dsp_mountpoint \
+    vendor_firmware-modem_mountpoint \
+    vendor_firmware_mnt_mountpoint
+
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += \
     $(COMMON_PATH)/overlay

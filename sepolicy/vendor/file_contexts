@@ -32,7 +32,6 @@
 # Data files
 /data/vendor/biometrics(/.*)?        u:object_r:biometrics_vendor_data_file:s0
 /data/vendor/conn(/.*)?              u:object_r:conn_vendor_data_file:s0
-/data/vendor/gatekeeper(/.*)?        u:object_r:gatekeeper_vendor_data_file:s0
 /data/vendor/gps(/.*)?               u:object_r:vendor_gps_file:s0
 /data/vendor/log/audiopcm(/.*)?      u:object_r:vendor_audiopcm_data_file:s0
 /data/vendor/secradio(/.*)?          u:object_r:radio_vendor_data_file:s0

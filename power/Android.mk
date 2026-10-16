@@ -34,7 +34,7 @@ LOCAL_INIT_RC := android.hardware.power-service-qti-sm6150.rc
 LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -Wno-unused-parameter -Wno-unused-variable
 LOCAL_VENDOR_MODULE := true
-LOCAL_VINTF_FRAGMENTS := power.xml
+LOCAL_VINTF_FRAGMENTS := android.hardware.power-service-qti-sm6150.xml
 
 include $(BUILD_EXECUTABLE)
 endif

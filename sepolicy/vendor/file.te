@@ -1,6 +1,5 @@
 # data
 type biometrics_vendor_data_file, file_type, data_file_type;
-type gatekeeper_vendor_data_file, file_type, data_file_type;
 type vendor_audiopcm_data_file, file_type, data_file_type;
 type conn_vendor_data_file, file_type, data_file_type;
 type radio_vendor_data_file, file_type, data_file_type;
