@@ -15,7 +15,7 @@ The following remain platform-specific integration points for other ROMs:
 | --- | --- |
 | `lineage.mk` | Lineage SDK, Doze, charging control, AIDL LiveDisplay and touch clients |
 | `livedisplay/`, `touch/` | `vendor.lineage.*-V1-ndk`, framework matrix and `hal_lineage_*` policy; port the clients/interfaces/policy or replace the service implementation |
-| `BoardConfigCommon.mk` | Lineage kernel build rules, `TARGET_INIT_VENDOR_LIB`, SurfaceFlinger UDFPS extension, charging-control flags and recovery updater hooks |
+| `BoardConfigCommon.mk` | Lineage kernel build rules, `TARGET_INIT_VENDOR_LIB`, SurfaceFlinger UDFPS extension and recovery updater hooks |
 | `sepolicy/` | Samsung, Qualcomm and Lineage policy types/macros; map these to the destination ROM, preserving enforcement |
 | `extract-files.py` | Lineage Python extract-utils and `hardware/lineage/compat` ABI libraries |
 | `hardware/qcom-caf/*` and Samsung HALs | Matching branches, Soong namespaces, typed camera/vibrator options, crypto and RIL interfaces |
@@ -39,3 +39,10 @@ suppression or permissive SELinux to hide failures.
 The current 4.14 kernel cannot satisfy the installed Connectivity runtime checks.
 A reviewed kernel/networking backport and matching ROM integration is required;
 changing the reported kernel version does not implement the missing features.
+
+The Android 16 reference review also opts the stock audio wrapper and common
+utilities out of the newer speaker-layout ABI field, migrates charging-control
+settings to typed Soong configuration in lineage.mk, explicitly disables UFFD GC
+for the current kernel, and redirects the actual tinyxml2 consumer through a
+repeatable extraction fixup. Evidence and pinned upstream commits are recorded in
+`device/samsung/a70q/compatibility/reference-review.md`.

@@ -45,6 +45,10 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 blob_fixups: blob_fixups_user_type = {
+    # BP4A's tinyxml2 has an incompatible C++ object layout. This stock binary
+    # must keep the legacy ABI, as with the same-platform LineageOS port.
+    'vendor/lib64/liblearningmodule.so': blob_fixup()
+        .replace_needed('libtinyxml2.so', 'libtinyxml2-v34.so'),
     ('vendor/lib64/libsec-ril.so', 'vendor/lib64/libsec-ril-dsds.so'): blob_fixup()
         .binary_regex_replace(b'ril.dds.call.slotid', b'vendor.calls.slotid')
         .sig_replace('60 0E 40 F9 82 0C 80 52 24 00 80 52 E1 03 15 AA E3 03 14 AA', '60 0E 40 F9 82 0C 80 52 24 00 80 52 E1 03 15 AA 03 00 80 D2'),
