@@ -27,6 +27,12 @@ cc_defaults {
 
     defaults: ["hidl_defaults"],
 
+    // Match audio.common utilities and the stock pre-15-QPR2 audio HAL.
+    cflags: select(soong_config_variable("android_hardware_audio", "skip_speaker_layout_channel_mask_field"), {
+        true: ["-include common/all-versions/SkipSpeakerLayoutChannelMaskField.h"],
+        default: [],
+    }),
+
     static_libs: [
         "libaudiofoundation",
     ],

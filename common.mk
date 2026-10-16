@@ -17,6 +17,10 @@
 # Define initial API level
 $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_p.mk)
 
+# a70q_defconfig disables USERFAULTFD. Keep ART's build-time GC selection
+# consistent with this non-GKI kernel until the required kernel work is done.
+PRODUCT_ENABLE_UFFD_GC := false
+
 # Add common definitions for Qualcomm
 $(call inherit-product, hardware/qcom-caf/common/common.mk)
 
@@ -80,6 +84,10 @@ PRODUCT_PACKAGES += \
     fs_config_files
 
 # Audio
+# The stock Android 11 HAL predates the audio_port device extension added in
+# Android 15 QPR2. Keep the shared HIDL conversion utilities on its original ABI.
+$(call soong_config_set_bool,android_hardware_audio,skip_speaker_layout_channel_mask_field,true)
+
 PRODUCT_PACKAGES += \
     android.hardware.audio.service \
     android.hardware.audio@6.0-impl.sm6150 \
